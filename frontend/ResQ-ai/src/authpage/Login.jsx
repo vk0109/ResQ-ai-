@@ -5,7 +5,7 @@ import { Eye, EyeOff, ShieldCheck, ArrowLeft, CheckCircle2, XCircle, Loader2 } f
 const Login = () => {
   const navigate = useNavigate();
 const location = useLocation();
-
+const API_URL = import.meta.env.VITE_API_URL;
 const fromDownload = location.state?.fromDownload === true;
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -40,19 +40,18 @@ const fromDownload = location.state?.fromDownload === true;
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: formData.email.trim(),
-            password: formData.password,
-          }),
-        }
-      );
-
+  `${API_URL}/api/auth/login`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: formData.email.trim(),
+      password: formData.password,
+    }),
+  }
+);
       const data = await response.json();
 
       if (!response.ok) {
@@ -83,7 +82,7 @@ const fromDownload = location.state?.fromDownload === true;
 
       setTimeout(() => {
   if (fromDownload) {
-    navigate("/", {
+    navigate("/app", {
       state: {
         openDownload: true,
       },

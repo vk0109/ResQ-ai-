@@ -13,7 +13,7 @@ import {
 
 const Signup = () => {
   const navigate = useNavigate();
-
+const API_URL = import.meta.env.VITE_API_URL;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -70,7 +70,7 @@ const Signup = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/register",
+        `${API_URL}/api/auth/register`,
         {
           method: "POST",
           headers: {

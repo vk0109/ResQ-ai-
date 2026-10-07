@@ -55,56 +55,58 @@ const navigate = useNavigate();
 
  const handleInstall = async () => {
   const sessionToken = localStorage.getItem("resqai_session_token");
-  const emailVerified = localStorage.getItem("resqai_email_verified");
+  const emailVerified =
+    localStorage.getItem("resqai_email_verified") === "true";
 
-  // Logged-in existing user → install directly
-  if (sessionToken) {
-    if (!deferredPrompt) {
-      alert(
-        "ResQ-AI can be installed from your browser's Install App or Add to Home Screen option."
-      );
-      return;
-    }
+  // Already running as installed PWA
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
 
-    deferredPrompt.prompt();
-
-    const { outcome } = await deferredPrompt.userChoice;
-
-    if (outcome === "accepted") {
-      setIsInstallable(false);
-    }
-
-    setDeferredPrompt(null);
+  if (isStandalone) {
+    navigate("/app", { replace: true });
     return;
   }
 
-  // New user who already verified email → install directly
-  if (emailVerified === "true") {
-    if (!deferredPrompt) {
-      alert(
-        "ResQ-AI is ready. Use your browser's Install App or Add to Home Screen option."
-      );
-      return;
-    }
-
-    deferredPrompt.prompt();
-
-    const { outcome } = await deferredPrompt.userChoice;
-
-    if (outcome === "accepted") {
-      setIsInstallable(false);
-    }
-
-    setDeferredPrompt(null);
+  // Not logged in / not verified → login first
+  if (!sessionToken && !emailVerified) {
+    navigate("/login", {
+      state: {
+        fromDownload: true,
+      },
+    });
     return;
   }
 
-  // Unauthorized user → Login
-  navigate("/login", {
-    state: {
-      fromDownload: true,
-    },
-  });
+  // Browser has provided the real PWA install prompt
+  if (deferredPrompt) {
+    try {
+      deferredPrompt.prompt();
+
+      const { outcome } = await deferredPrompt.userChoice;
+
+      if (outcome === "accepted") {
+        setIsInstallable(false);
+
+        // Give Chrome a moment to complete installation
+        setTimeout(() => {
+          navigate("/app", { replace: true });
+        }, 500);
+      }
+
+      setDeferredPrompt(null);
+    } catch (error) {
+      console.error("PWA install error:", error);
+      setDeferredPrompt(null);
+    }
+
+    return;
+  }
+
+  // No install prompt available.
+  // Don't show ugly browser alert.
+  // Send the user to the actual application instead.
+  navigate("/app", { replace: true });
 };
   return (
     <section
@@ -317,7 +319,7 @@ const navigate = useNavigate();
                 className="transition-transform duration-300 group-hover:-translate-y-0.5"
               />
 
-              {isInstallable ? "Install ResQ-AI" : "Get Offline Version"}
+            {isInstallable ? "Install ResQ-AI" : "Open RESQ-AI"}
 
               <ArrowRight
                 size={14}
